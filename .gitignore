@@ -1,0 +1,8 @@
+# ignore the config file
+config.ini
+
+# ignore my notes file
+deets.txt
+
+# ignore ~ files
+*~
