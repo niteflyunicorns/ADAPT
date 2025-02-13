@@ -13,11 +13,20 @@ import mplcursors
 from matplotlib import gridspec
 
 
-## PLOT 1D Data #########################################################################
+#########################################################################################
+### Function: plot1D
+### Inputs: asteroid name, data array, data name, and a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
 def plot1D():
     pass
 
-## PLOT 2D Data #########################################################################
+#########################################################################################
+### Function: plot2D
+### Inputs: asteroid name, x and y data arrays, x and y data names, and
+###         a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
 def plot2D( astName, xdata, ydata,
             data, xname, yname, export ):
     plt.title( "Asteroid " + str( astName ) )
@@ -33,7 +42,13 @@ def plot2D( astName, xdata, ydata,
         plt.show( block = True )
         plt.show()
 
-## PLOT 3D Data #########################################################################        
+
+#########################################################################################
+### Function: plot3D
+### Inputs: asteroid name, x, y, and z data arrays, x, y, and z data names, and
+###         a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
 def plot3D( astName, xdata, ydata, zdata,
             xname, yname, zname, export ):
     
@@ -53,12 +68,12 @@ def plot3D( astName, xdata, ydata, zdata,
 
     pass
     
-########################################################################################
+#########################################################################################
 ### Function: plot3Das2D
 ### Inputs: asteroid name, x, y, and z data arrays, x, y, and z data names, and
 ###         a flag for exporting
 ### Returns: none (either displays plot immediately, or silently exports to png)
-########################################################################################
+#########################################################################################
 def plot3Das2D( astName, xdata, ydata, zdata,
                     xname, yname, zname, data, export ):
 
@@ -89,7 +104,12 @@ def plot3Das2D( astName, xdata, ydata, zdata,
         plt.show( block=True )
         # fig.show()
         
-## PLOT 1 Dimensional Data ##############################################################    
+#########################################################################################
+### Function: plot3Dand2D
+### Inputs: asteroid name, x, y, and z data arrays, x, y, and z data names, and
+###         a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
 def plot3Dand2D( astName, xdata, ydata, zdata,
                     xname, yname, zname, data, export ):
 
