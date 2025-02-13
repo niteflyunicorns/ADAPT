@@ -12,7 +12,7 @@
 # VARIABLES ---------------------------------------
 # required variables:
 maxIn=1
-offset=0
+offset=27831
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
 fltrType=2
@@ -24,7 +24,7 @@ exportFlg=False
 # optional variables:
 fileType=2 # default 2 (.csv)
 fileName="~/astroInfoResearch/astroInfo/ast291032" # default ""
-astName=216 # default 0
+astName=8021 # default 0
 featFltr=n # default n
 lB=0 # default 0
 uB=0 # default 0
@@ -44,16 +44,23 @@ uB=0 # default 0
 
 # RUNNING -----------------------------------------
 # No export, multiple asteroids
-# time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
-
-# Export multiple asteroids
-# time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName"
-
-# No export, single asteroid
-time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$astName" "$featFltr" "$lB" "$uB"
-
-# Export single asteroid
-# time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName" "$astName" "$featFltr" "$lB" "$uB"
+if [ $exportFlg == "False" ]; then
+	if [ $maxIn -gt 1 ]; then
+	   # No export, multiple asteroids
+	   time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
+	else
+	   # No export, single asteroid
+	   time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$astName" "$featFltr" "$lB" "$uB"
+   fi
+else
+	if [ $maxIn -gt 1 ]; then
+		# Export, multiple asteroids
+		time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName"
+	else
+		# Export, single asteroid
+		time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName" "$astName" "$featFltr" "$lB" "$uB"
+    fi
+fi
 
 # if [$(maxIn) == -1]; then
 # fi
@@ -67,8 +74,6 @@ time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plo
 
 # if [$(exportFlg) == 'n']; then
 # fi
-
-
 
    # New Program Variables / Args
 
