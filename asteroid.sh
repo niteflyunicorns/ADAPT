@@ -38,7 +38,7 @@ uB=0 # default 0
 
 # PROFILING ---------------------------------------
 # assumes there is no plots or output
-# time kernprof -lv 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
+# time kernprof -lv runADAPT.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
 
 
 
@@ -47,18 +47,18 @@ uB=0 # default 0
 if [ $exportFlg == "False" ]; then
 	if [ $maxIn -gt 1 ]; then
 	   # No export, multiple asteroids
-	   time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
+	   time python runADAPT.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg"
 	else
 	   # No export, single asteroid
-	   time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$astName" "$featFltr" "$lB" "$uB"
+	   time python runADAPT.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$astName" "$featFltr" "$lB" "$uB"
    fi
 else
 	if [ $maxIn -gt 1 ]; then
 		# Export, multiple asteroids
-		time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName"
+		time python runADAPT.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName"
 	else
 		# Export, single asteroid
-		time python 2astOutlierMatNew.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName" "$astName" "$featFltr" "$lB" "$uB"
+		time python runADAPT.py "$maxIn" "$offset" "$fltrType" "$fltrLvl" "$plots" "$exportFlg" "$fileType" "$fileName" "$astName" "$featFltr" "$lB" "$uB"
     fi
 fi
 
