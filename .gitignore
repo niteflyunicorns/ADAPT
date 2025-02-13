@@ -6,3 +6,13 @@ notes/*
 
 # ignore ~ files
 *~
+
+# ignore pycache & lprof
+__pycache__/
+*.lprof
+
+# ignore data files
+*.png
+*.html
+*.csv
+data/*
