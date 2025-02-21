@@ -22,6 +22,7 @@ import configparser as cfp
 # import asteroidMenuClass as menu
 
 ## New Imports ##########################################################################
+from AstDataClass import AstData
 import plotting as plot # may not need this eventually
 import output as out
 import getObservations as getObs # may not need this eventually
@@ -62,7 +63,7 @@ weightDict = {
 def clear( size ):
     print( "\n" * size )
 
-# getInputs: takes an dinput array and output array. Loops through
+# getInputs: takes an input array and output array. Loops through
 # input prompts and gets user input and stores in output array
 def getInputs( inArray, outArray ):
     for prompt in inArray:
@@ -129,6 +130,7 @@ def main( ):
     offset = int( sys.argv[ 2 ] )
     fltrType = int( sys.argv[ 3 ] )
     fltrLvl = int( sys.argv[ 4 ] )
+    fltr = [ fltrType, fltrLvl ]
     plots = sys.argv[ 5 ]
     exportFlg = sys.argv[ 6 ]
     # wantedAttrs = sys.argv[ 7 ]
@@ -140,6 +142,12 @@ def main( ):
     # annoying handling of boolean inputs - may change this later
     exportFlg = [ False, True ][ exportFlg.lower()[0] == "t" ]
     plots = [ False, True ][ plots.lower()[0] == "t" ]
+
+    # initialize astData object and some variables
+    astData = AstData()
+    astData.setupAttrs( wantedAttrs, ['jd', 'id', 'ssnamenr'] )
+    astData.setMaxIn( maxIn )
+    astData.setOffset( offset )
 
     if len(sys.argv) <= 7:
         pass
@@ -160,11 +168,12 @@ def main( ):
                         sys.argv[ 8 ],
                         int( sys.argv[ 9 ] ),
                         int( sys.argv[ 10 ] ) ]
-    
+            # astData.names.append( int( sys.argv[ 7 ] ) )
+
     if maxIn == 1:
-        oneAst.view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots )
+        oneAst.view( astData, astArgs, exportFlg, exportArgs, fltr, plots )
     else:
-        multAst.run( maxIn, offset, exportFlg, exportArgs, fltrType, fltrLvl, plots )
+        multAst.run( astData, exportFlg, exportArgs, fltr, plots )
 
 ## Run the program #####################################################################
 main( )

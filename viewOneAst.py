@@ -14,20 +14,12 @@ import pandas as pd
 ## Custom imports ##
 import plotting as plot
 import getObservations as getObs
-from mongoConnection import Mongo
 import anomRatingADAPT as anomaly
 import output as out
 
 
 ### VARIABLES ###########################################################################
-mongo = Mongo()
-mag18Database = mongo.getData( 'mag18o8' )
 
-wantedAttrs = [ "elong", "rb", "H", "mag18omag8" ] # attributes we want to look at
-dataCols = wantedAttrs.copy()
-dataCols.extend( [ 'jd', 'id', 'ssnamenr' ] ) # additional cols needed for processing
-numFeatures = len( wantedAttrs )
-ztfIDS = list( ) # list for associated ztf id for observation
 
 #########################################################################################
 ### VIEWONE function
@@ -37,65 +29,53 @@ ztfIDS = list( ) # list for associated ztf id for observation
 ### Use: Allows user to specific the name ( numerical 'ssnamenr' from database ) of an
 ### asteroid they wish to analyze more in depth than in runProgram. 
 #########################################################################################
-def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
+def view( astData, astArgs, exportFlg, exportArgs, fltr, plots ):
     # note: currently, exportArgs is unused
     # process & repackage inputs
     astName = astArgs[ 0 ]
     featFltr = astArgs[ 1 ]
     lB = astArgs[ 2 ]
     uB = astArgs[ 3 ]
-    fltr = [ fltrType, fltrLvl ]
-    asteroid = pd.DataFrame( mag18Database.find( { "ssnamenr": int( astName ) } ).sort( "jd" ) )
-
-    # menu2Dict = { 0: 'Inspect Asteroid ' + str( astName ) + ":",
-    #              1: 'View asteroid data',
-    #              2: 'Save/download asteroid data',
-    #              3: 'View Data by Attribute',
-    #              4: 'Return to Main Menu',
-    #              5: 'Quit' }
-    # menu2Choice = 0
-    
-    # while menu2Choice != 4 or menu2Choice != 5:
-    #     menu.display( menu2Dict )
-    #     menu2Choice = int( input( ) )
-    #     clear( 2 )
+    data = pd.DataFrame( astData.mag18.find( { "ssnamenr": int( astName ) } ) )
+    asteroid = astData.sort( data, "jd" )
 
     menu2Choice = 1 # hardcoded for testing purposes - move this to shell later!
     
     if menu2Choice == 1:
-        # this is all for filter type 1 (anomaly rating) -- so this will have to wait until
-        # I move that all to its own file
+    # this is all for filter type 1 (anomaly rating) -- so this will have to wait until
+    # I move that all to its own file
         print( "Asteroid " + str( astName ) + " Stats:\n" )
-        astSigmaMatrix = np.zeros( [ 1, numFeatures + 2 ] )
+        print( astData.numFeatures )
+        astSigmaMatrix = np.zeros( [ 1, astData.numFeatures + 2 ] )
         obsData = [ ]
-        sigmaMatrix, obsData, ztfIDS, outliers = anomaly.fillSigmaMatrix( astName, asteroid, astSigmaMatrix, fltr, True, plots, exportFlg )
+        # filtering for anomaly rating.
+        sigmaMatrix, obsData, astData.ztfIDS, outliers = anomaly.fillSigmaMatrix( astName, asteroid, astSigmaMatrix, fltr, True, plots, exportFlg )
+        # post-processing for filter
         if len( sigmaMatrix ) == 0:
-            print( "ERROR: Your chosen filter level yielded an empty matrix!" )
-            ztfIDS.clear( )
-            # viewOne( )
-            # THIS FUNCTIONALITY IS DEPRECATED
+            # print( "ERROR: Your chosen filter level yielded an empty matrix!" )
+            astData.ztfIDS.clear( )
 
-        #breakpoint( )
-        print( ztfIDS )
-        table = out.formatDataTable( sigmaMatrix, ztfIDS, [ astName ], 1, numFeatures )
+        # print( astData.ztfIDS )
+        print( sigmaMatrix )
+        table = out.formatDataTable( sigmaMatrix, astData.ztfIDS, [ astName ], 1, astData.numFeatures )
         astRating = float( table[ "Rating" ] )
 
         # reset ztfIDS for reruns of program
         ### ERROR: This works for the most part, but still errors out upon quitting
         ### the program - not sure why
-        ztfIDS.clear( )
+        astData.ztfIDS.clear( )
 
-        print( table.transpose( ) )
+        # display filtered results
+         print( table.transpose( ) )
         print( "\n\n" )
 
         displayAll = False # hardcoded for testing purposes - move this to shell later! 
         if ( displayAll ):
-        # if ( input( "Display all data for asteroid " + str( astName ) + "? ( y/n )\n" ) != 'n' ):
             print( "\n\n" )
             print( "Asteroid Rating: " + str( round( astRating, 2 ) ) + "%" )
             print( "\n" )
 
-            for attr in wantedAttrs:
+            for attr in astData.wantedAttrs:
                 pass
                 # TODO
                 # add all attrs to little lists
@@ -110,7 +90,7 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
             print( "    Std Dev: ........... " + str( stat.stdev( asteroid[ "elong" ] ) ) )
             print( "    Mean: .............. " + str( stat.mean( asteroid[ "elong" ] ) ) )
             print( "    JD: ................ " + str( int( obsData[ 0 ] ) ) )
-            print( "    ZTF ID: ............ " + str( ztfIDS[ 0 ] ) )
+            print( "    ZTF ID: ............ " + str( astData.ztfIDS[ 0 ] ) )
 
             print( "RB:" )
             print( "    Sigma: ............. " + str( float( table[ "rb" ] ) ) )
@@ -118,7 +98,7 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
             print( "    Std Dev: ........... " + str( stat.stdev( asteroid[ "rb" ] ) ) )
             print( "    Mean: .............. " + str( stat.mean( asteroid[ "rb" ] ) ) )
             print( "    JD: ................ " + str( int( obsData[ 1 ] ) ) )
-            print( "    ZTF ID: ............ " + str( ztfIDS[ 1 ] ) )            
+            print( "    ZTF ID: ............ " + str( astData.ztfIDS[ 1 ] ) )            
 
             print( "H:" )
             print( "    Sigma: ............. " + str( float( table[ "H" ] ) ) )
@@ -126,7 +106,7 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
             print( "    Std Dev: ........... " + str( stat.stdev( asteroid[ "H" ] ) ) )
             print( "    Mean: .............. " + str( stat.mean( asteroid[ "H" ] ) ) ) 
             print( "    JD: ................ " + str( int( obsData[ 2 ] ) ) )
-            print( "    ZTF ID: ............ " + str( ztfIDS[ 2 ] ) )            
+            print( "    ZTF ID: ............ " + str( astData.ztfIDS[ 2 ] ) )            
 
             print( "MAG18:" )
             print( "    Sigma: ............. " + str( float( table[ "mag18omag8" ] ) ) )
@@ -134,7 +114,7 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
             print( "    Std Dev: ........... " + str( stat.stdev( asteroid[ "mag18omag8" ] ) ) )
             print( "    Mean: .............. " + str( stat.mean( asteroid[ "mag18omag8" ] ) ) )
             print( "    JD: ................ " + str( int( obsData[ 3 ] ) ) )
-            print( "    ZTF ID: ............ " + str( ztfIDS[ 3 ] ) )                            
+            print( "    ZTF ID: ............ " + str( astData.ztfIDS[ 3 ] ) )                            
             print( "\n\n" )
             print( asteroid[ [ "jd", "elong", "H", "rb", "mag18omag8", "fid" ] ] )
 
@@ -156,7 +136,7 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
 
         # call function to print all observations of
         # this asteroid
-        getObs.getAll( astName, asteroid, dataCols, exportFlg )
+        getObs.getAll( astName, asteroid, astData.dataCols, exportFlg )
 
         # plot3D( astName, asteroid['rb'],
         #             asteroid['elong'],
@@ -370,3 +350,21 @@ def view( astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
 # TODO:
 # translate remaining menu options into functions
 # ie. view(), filter(), getObs(), plot(), getSpecificAttr()
+
+def filter():
+    pass
+
+
+
+def preprocess( astData, astArgs, exportFlg, exportArgs, fltrType, fltrLvl, plots ):
+    # note: currently, exportArgs is unused
+    # process & repackage inputs
+    astName = astArgs[ 0 ]
+    featFltr = astArgs[ 1 ]
+    lB = astArgs[ 2 ]
+    uB = astArgs[ 3 ]
+    fltr = [ fltrType, fltrLvl ]
+    data = pd.DataFrame( astData.mag18.find( { "ssnamenr": int( astName ) } ) )
+    asteroid = astData.sort( data, "jd" )
+    astSigmaMatrix = np.zeros( [ 1, astData.numFeatures + 2 ] )
+    obsData = [ ]

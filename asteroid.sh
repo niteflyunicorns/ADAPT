@@ -11,14 +11,14 @@
 
 # VARIABLES ---------------------------------------
 # required variables:
-maxIn=1
-offset=27831
+maxIn=2
+offset=0
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
 fltrType=2
 fltrLvl=2
 
-plots=True
+plots=False
 exportFlg=False
 
 # optional variables:
