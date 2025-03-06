@@ -100,7 +100,7 @@ def plot3Das2D( astName, xdata, ydata, zdata,
         fig.savefig( str(astName) + "plots3-2D.png" )
     else:
         cursor = mplcursors.cursor( hover=True )
-        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "jd" ].iloc[ sel.index ] ) )
+        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
         plt.show( block=True )
         # fig.show()
         
@@ -152,6 +152,6 @@ def plot3Dand2D( astName, xdata, ydata, zdata,
         fig.savefig( str(astName) + "plots3D+2D.png" )
     else:
         cursor = mplcursors.cursor( hover=True )
-        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "jd" ].iloc[ sel.index ] ) )
+        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
         plt.show( block=True )
         fig.show()

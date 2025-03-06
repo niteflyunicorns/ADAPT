@@ -30,7 +30,7 @@ class AstData():
         self.maxIn = 0
         self.ztfIDS = list()
         self.weightDict = {} # currently unused
-        self.names = pd.DataFrame()
+        self.names = list()
 
 
     def setupAttrs( self, attrs, extras ):
@@ -40,7 +40,9 @@ class AstData():
         self.numFeatures = len( attrs )
 
     def setAstNames( self ):
-        self.names = pd.DataFrame( asteroidData.find( {},{ '_id': 0, 'ssnamenr': 1 } ) )
+        tempNames = pd.DataFrame( asteroidData.find( {},{ '_id': 0, 'ssnamenr': 1 } ) )
+        for idx in range(self.offset, self.offset + self.maxIn ):
+            self.names.append( tempNames["ssnamenr"][ idx ] )
 
     def setOffset( self, value=-1 ):
         if ( value < 0 and maxIn < asteroidData.count() ):

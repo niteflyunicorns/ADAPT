@@ -29,6 +29,7 @@ import getObservations as getObs # may not need this eventually
 import viewOneAst as oneAst
 import viewMultAst as multAst
 import anomRatingADAPT as anomaly
+import dbscanADAPT as dbscan
 
 ## GLOBAL VARS ##########################################################################
 offset = 0 # for shifting data scope
@@ -36,6 +37,12 @@ attrList = "ssnamenr, jd, fid, pid, diffmaglim, ra, dec, magpsf, sigmapsf, \
 chipsf, magap, sigmagap, magapbig, sigmagapbig, distnr, magnr, fwhm, elong, rb, \
 ssdistnr, ssmagnr, id, night, phaseangle, obsdist, heliodist, H, ltc, mag18omag8"
 # attrList is for users to choose attrs to filter by
+fltrTypeMsg = \
+    "1. 'anomaly' : use the custom sigma-based anomaly rating system (see the README.md for more information). \n\
+2. 'dbscan' : use DBSCAN filtering \n\
+3. 'isoforest' : use Isolation Forest filtering \n\
+4. 'knn' : use K-Nearest Neighbors filtering \n\ "
+
 
 # Top 4 Attributes of Interest:
 # mag180mag8 : sigma value for difference in 18" aperture vs 8" aperture photos
@@ -128,7 +135,7 @@ def leave( ):
 def main( ):
     maxIn = int( sys.argv[ 1 ] )
     offset = int( sys.argv[ 2 ] )
-    fltrType = int( sys.argv[ 3 ] )
+    fltrType = sys.argv[ 3 ]
     fltrLvl = int( sys.argv[ 4 ] )
     fltr = [ fltrType, fltrLvl ]
     plots = sys.argv[ 5 ]
@@ -153,27 +160,40 @@ def main( ):
         pass
         # exportArgs = [ 2, "" ]
         # astArgs = [ 0, 'n', 0, 0 ]
+        astData.setAstNames()        
     else:
         # out.help()
         if exportFlg:
             exportArgs = [ int( sys.argv[ 7 ] ),
                            sys.argv[ 8 ] ]
+            astData.setAstNames()
             if maxIn == 1:
                 astArgs = [ int( sys.argv[ 9 ] ),
                             sys.argv[ 10 ],
                             int( sys.argv[ 11 ] ),
                             int( sys.argv[ 12 ] ) ]
+                astData.names.append( int( sys.argv[ 9 ] ) )
+                print( astData.names )
         else:
             astArgs = [ int( sys.argv[ 7 ] ),
                         sys.argv[ 8 ],
                         int( sys.argv[ 9 ] ),
                         int( sys.argv[ 10 ] ) ]
-            # astData.names.append( int( sys.argv[ 7 ] ) )
+            astData.names.append( int( sys.argv[ 7 ] ) )
 
-    if maxIn == 1:
-        oneAst.view( astData, astArgs, exportFlg, exportArgs, fltr, plots )
+    if fltrType == "anomaly":
+        if maxIn == 1:
+            oneAst.view( astData, astArgs, exportFlg, exportArgs, fltr, plots )
+        else:
+            multAst.run( astData, exportFlg, exportArgs, fltr, plots )
+            
+    elif fltrType == "dbscan":
+        dbscan.runDBSCAN( astData, plots, exportFlg )
+    elif fltrType == "isoforest":
+        pass
     else:
-        multAst.run( astData, exportFlg, exportArgs, fltr, plots )
+        print("ERROR: Incorrect filter type given. Please choose from the following:" )
+        print( fltrTypeMsg )
 
 ## Run the program #####################################################################
 main( )

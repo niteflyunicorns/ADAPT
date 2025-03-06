@@ -28,3 +28,22 @@ def getAll( name, data, cols, exportFlg ):
     else:
         filename = "ast" + str(name) + "_allObs"
         out.exportFile( 3, filename, miniDF )
+
+
+
+def getSelect( name, obsToGet, data, cols, exportFlg ):
+    header = "Asteroid " + str(name) + ": All Observations"
+    tail = "\n"
+
+    dropping = data.index.difference( obsToGet.index )
+    df = data.drop( dropping )
+        
+    newDF = df[ cols ]
+    if not exportFlg:
+        print( "Asteroid " + str( name ) + ":" )
+        print( tabulate( newDF, headers='keys', tablefmt='simple_outline' ) ) 
+    else:
+        filename = "ast" + str(name) + "_selectObs"
+        out.exportFile( 3, filename, newDF )
+
+    return df
