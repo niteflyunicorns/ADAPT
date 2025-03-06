@@ -21,12 +21,12 @@ fltrType='dbscan'
 fltrLvl=2
 
 plots=True
-exportFlg=True
+exportFlg=False
 
 # optional variables:
 fileType=2 # default 2 (.csv)
 fileName="~/astroInfoResearch/astroInfo/ast291032" # default ""
-astName=8021 # default 0
+astName=6478 # default 0
 featFltr=n # default n
 lB=0 # default 0
 uB=0 # default 0
