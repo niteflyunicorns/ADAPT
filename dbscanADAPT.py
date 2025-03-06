@@ -32,10 +32,10 @@ def preProcess( astData, name ): # will take cols as input later
     scaler = Normalizer()
     data = pd.DataFrame( astData.mag18.find( { "ssnamenr": int( name ) } ) )
     sortedDF = astData.sort( data, "jd" )
-    df = astData.trimToCols( sortedDF, ["elong", "rb", "mag18omag8"] )
+    df = astData.trimToCols( sortedDF, ["rb", "elong", "mag18omag8"] )
     dataArray = df.to_numpy()
     normData = scaler.fit_transform( dataArray )
-    return sortedDF, normData
+    return sortedDF, dataArray, normData
     
 
 # data needs to be trimmed to desiredCols (1 asteroid at a time)
@@ -44,7 +44,7 @@ def runDBSCAN( astData, plots, export ): # not sure if eps and minPts should be 
     names = astData.names
     for astName in names:
         # astName = astData.names[0] # for now
-        untrimmed, data = preProcess( astData, astName )
+        untrimmed, unnorm, data = preProcess( astData, astName )
 
         e = 0.04 # starting point
         minPts = 3 # starting point
@@ -61,7 +61,7 @@ def runDBSCAN( astData, plots, export ): # not sure if eps and minPts should be 
 
             if ( plots ):
                 extraStuff = [ minPts, e, clusterSizes ]
-                plotDBSCAN( labels, db, extraStuff, data, astName, export )
+                plotDBSCAN( labels, db, extraStuff, unnorm, astName, export )
 
             clusterData = fetchDataForCluster( 1, untrimmed, labels, astName, astData.dataCols, export )
 
@@ -77,7 +77,7 @@ def runDBSCAN( astData, plots, export ): # not sure if eps and minPts should be 
 
 def paramTune( astData, astName, plots, export ):
     # astName = astData.names[0] # for now
-    data = preProcess( astData )
+    untrimmed, unnorm, data = preProcess( astData )
 
     for e in float_range( 0.01, 0.1, 0.01 ):
         for minPts in range( 3, 10, 2):
@@ -88,7 +88,7 @@ def paramTune( astData, astName, plots, export ):
 
             if ( plots ):
                 extraStuff = [ minPts, e, clusterSizes ]
-                plotDBSCAN( labels, db, extraStuff, data, astName, export )
+                plotDBSCAN( labels, db, extraStuff, unnorm, astName, export )
 
         
 
@@ -141,8 +141,8 @@ def plotDBSCAN( labels, db, extras, data, astName, export ):
             legendEntries.append( patch )
 
 
-    ax.set_xlabel( "elong" )    
-    ax.set_ylabel( "rb" )
+    ax.set_xlabel( "rb" )    
+    ax.set_ylabel( "elong" )
     ax.set_zlabel( "mag18omag8" )
     ax.set_title(f"{astName}")
 
@@ -150,6 +150,7 @@ def plotDBSCAN( labels, db, extras, data, astName, export ):
     ax.set_ylim(np.min(data[:, 1]), np.max(data[:, 1]))
     ax.set_zlim(np.min(data[:, 2]), np.max(data[:, 2]))
     ax.invert_yaxis()
+    ax.invert_xaxis()
     # ax.invert_zaxis()
 
     noisePercent = ( n_noise_ / len( labels ) ) * 100
