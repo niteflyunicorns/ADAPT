@@ -11,15 +11,17 @@
 
 # VARIABLES ---------------------------------------
 # required variables:
-maxIn=2
-offset=0
+maxIn=1
+offset=3289
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType=2
+fltrType='dbscan'
+# ^ fltrType can be one of:
+# 'anomaly', 'dbscan', 'isoforest', 'knn'
 fltrLvl=2
 
-plots=False
-exportFlg=False
+plots=True
+exportFlg=True
 
 # optional variables:
 fileType=2 # default 2 (.csv)
