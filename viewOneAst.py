@@ -66,7 +66,7 @@ def view( astData, astArgs, exportFlg, exportArgs, fltr, plots ):
         astData.ztfIDS.clear( )
 
         # display filtered results
-         print( table.transpose( ) )
+        print( table.transpose( ) )
         print( "\n\n" )
 
         displayAll = False # hardcoded for testing purposes - move this to shell later! 

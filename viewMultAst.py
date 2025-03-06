@@ -31,6 +31,7 @@ import anomRatingADAPT as anomaly
 def run( astData, exportFlg, exportArgs, fltr, plots ):
     fileType, fileName = exportArgs
     astData.setAstNames()
+    print( astData.names )
     featFltr = 'n' # not sure what this is doing
     # num of asteroids we have looked at 
     ast_ct = 0
@@ -46,7 +47,7 @@ def run( astData, exportFlg, exportArgs, fltr, plots ):
         obsData = [ ]
         arrayOffset = ast_ct + astData.offset
         # grab asteroid name
-        name = astData.names[ "ssnamenr" ][ arrayOffset ]
+        name = astData.names[ arrayOffset ]
         # reset attributes looked at
         attr_ct = 0
         # sort specific asteroid data by Julian Date
@@ -84,7 +85,7 @@ def run( astData, exportFlg, exportArgs, fltr, plots ):
         
     # Formatting data structures
     arrayOffset = astData.offset + ast_ct
-    nameArray = np.array( astData.names[ 'ssnamenr' ] )[ astData.offset: arrayOffset ]
+    nameArray = np.array( astData.names )[ astData.offset: arrayOffset ]
 
     dataset = out.formatDataTable( sigmaMatrix, astData.ztfIDS, nameArray, astData.maxIn, astData.numFeatures )
 
