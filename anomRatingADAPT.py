@@ -224,7 +224,7 @@ def fillSigmaMatrix( name, asteroid, sigmaMatrix, fltr, outFlag, plot, export ):
     numZeros = 0
 
     #### FILTERING DATA ####
-    if fltrType == 1:
+    if fltrType == "numpernight":
         # Option 1: filter by number of times outliers occur during single observation
         for obs in range( len( obsData ) ):
             if obsData.count( obsData[ obs ] ) >= fltrLevel:
@@ -234,7 +234,7 @@ def fillSigmaMatrix( name, asteroid, sigmaMatrix, fltr, outFlag, plot, export ):
                 numZeros += 1
         if numZeros > fltrLevel:
             stripFlag = True        
-    elif fltrType == 2:
+    elif fltrType == "anomaly":
         # Option 2: filter by specifications
         # assigns rating to each asteroid on how likely they are to be anomalous
         # each category is normalized to [ 0,1 ] and the outlying point is rated from
@@ -245,7 +245,7 @@ def fillSigmaMatrix( name, asteroid, sigmaMatrix, fltr, outFlag, plot, export ):
         
         if astRating < fltrLevel:
             stripFlag = True
-    elif fltrType == 3:
+    elif fltrType == "sigweight":
         # Option 3: filter by weight
         ### TODO: Write filter by weight option
         pass
@@ -253,9 +253,9 @@ def fillSigmaMatrix( name, asteroid, sigmaMatrix, fltr, outFlag, plot, export ):
         pass
 
     # setting rowAttrs and astRating
-    if fltrType != 2:
+    if fltrType != "anomaly":
         astRating = np.nan
-    if fltrType in [ 3, 4 ]:
+    if fltrType in [ "sigweight", "none" ]:
         rowAttrs = attrData
 
     rowAttrs.append( rowSum )
