@@ -30,6 +30,7 @@ import viewOneAst as oneAst
 import viewMultAst as multAst
 import anomRatingADAPT as anomaly
 import dbscanADAPT as dbscan
+import isoforestADAPT as forest
 
 ## GLOBAL VARS ##########################################################################
 offset = 0 # for shifting data scope
@@ -190,7 +191,7 @@ def main( ):
     elif fltrType == "dbscan":
         dbscan.runDBSCAN( astData, plots, exportFlg )
     elif fltrType == "isoforest":
-        pass
+        forest.runIForest( astData, plots, exportFlg )
     else:
         print("ERROR: Incorrect filter type given. Please choose from the following:" )
         print( fltrTypeMsg )
