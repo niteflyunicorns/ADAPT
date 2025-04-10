@@ -15,18 +15,18 @@ maxIn=1
 offset=3289
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType='dbscan'
+fltrType='mix'
 # ^ fltrType can be one of:
-# 'anomaly', 'dbscan', 'isoforest', 'knn'
+# 'anomaly', 'dbscan', 'isoforest', 'mix'
 fltrLvl=2
 
 plots=True
-exportFlg=False
+exportFlg=True
 
 # optional variables:
 fileType=2 # default 2 (.csv)
 fileName="~/astroInfoResearch/astroInfo/ast291032" # default ""
-astName=8021 # default 0
+astName=990 # default 0
 featFltr=n # default n
 lB=0 # default 0
 uB=0 # default 0

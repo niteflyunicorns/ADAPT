@@ -1,7 +1,7 @@
 #########################################################################################
 ### Program: ADAPT
 ### Programmer: Savannah Chappus
-### Last Update: 1.31.2025
+### Last Update: 4.3.2025
 #########################################################################################
 
 ## IMPORTS ##############################################################################
@@ -31,6 +31,7 @@ import viewMultAst as multAst
 import anomRatingADAPT as anomaly
 import dbscanADAPT as dbscan
 import isoforestADAPT as forest
+import hybridADAPT as hybrid
 
 ## GLOBAL VARS ##########################################################################
 offset = 0 # for shifting data scope
@@ -173,8 +174,7 @@ def main( ):
                             sys.argv[ 10 ],
                             int( sys.argv[ 11 ] ),
                             int( sys.argv[ 12 ] ) ]
-                astData.names.append( int( sys.argv[ 9 ] ) )
-                print( astData.names )
+                astData.names = [ ( int( sys.argv[ 9 ] ) ) ]
         else:
             astArgs = [ int( sys.argv[ 7 ] ),
                         sys.argv[ 8 ],
@@ -192,6 +192,8 @@ def main( ):
         dbscan.runDBSCAN( astData, plots, exportFlg )
     elif fltrType == "isoforest":
         forest.runIForest( astData, plots, exportFlg )
+    elif fltrType == "mix":
+        hybrid.run( astData, plots, exportFlg )
     else:
         print("ERROR: Incorrect filter type given. Please choose from the following:" )
         print( fltrTypeMsg )
