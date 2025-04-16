@@ -58,6 +58,35 @@ def preProcess( astData, name, process ):
         trainData, testData  = train_test_split( dataArray, random_state=42 )
         return sortedDF, trainData, testData
 
+    
+def getClusters( data, dbData, isoData, labels, name, cols, exportFlg ):
+    # pass
+    # get labels for clusters that overlap between db and iso
+    # filter overlapping clusters by threshold of iso to non-iso
+    clusters = []
+    for k in labels:
+       dbMask = labels == k
+       isoMask = isoData == -1
+
+       mixClust = data[ dbMask & isoMask ]
+       dbClust = data[ dbMask ]
+       mixSize = len( mixClust )
+       dbSize = len( dbClust )
+
+       if ( mixSize / dbSize ) > 0.5:
+           clusters.append( k )
+
+    return clusters
+    # return list of cluster labels for clusters that have:
+    # more than 50% of their points flagged by both db and iso
+
+
+def fetchDataForCluster( clusterNum, data, labels, name, cols, exportFlg ):
+    clusterData = data[ labels == clusterNum ]
+    data = getObs.getSelect( name, clusterData, data, cols, exportFlg )
+    return data
+
+
 def plotDBSCAN( ax, labels, db, extras, data, astName, export ):
     minPts, e, clusterSizes = extras
     unique_labels = set(labels)
@@ -68,7 +97,6 @@ def plotDBSCAN( ax, labels, db, extras, data, astName, export ):
     n_clusters_ = len( set( labels ) ) - ( 1 if -1 in labels else 0 )
     n_noise_ = list( labels ).count( -1 )
 
-    # colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]
     for k, col in zip(unique_labels, colors[ "light" ]):
         if k == -1:
             # Black used for noise.
@@ -147,7 +175,6 @@ def plotMIX( ax, labels, db, extras, data, isoResults, astName, export ):
     n_noise_ = list( labels ).count( -1 )
     clustColors = colors[ "light" ]
     anomColors = colors[ "dark" ]
-    # combinedLabels = np.where( ( labels == -1 ) & ( isoResults == -1 ), -2, labels )
 
     for k in set( labels ):
         if k == -1:
@@ -282,16 +309,7 @@ def run( astData, plots, export ):
                 extraStuff = [ minPts, e, clusterSizes ]
                 # plotDBSCAN( labels, db, extraStuff, unnorm, astName, export )
 
-            # clusterData = fetchDataForCluster( 1, untrimmed, labels, astName, astData.dataCols, export )
-
             getObs.getAll( astName, untrimmed, astData.dataCols, export )
-            # if ( export ):
-            #     out.exportFile( 3, str(astName) + "clusterData", clusterData )
-            # else:
-            #     out.screenDisplay( clusterData, "Cluster Data" )
-
-            # if ( stamps ):
-            #     postage.fromDF( clusterData )
 
 
         ###############################################################################
@@ -305,7 +323,8 @@ def run( astData, plots, export ):
 
         if plots:
             # setup
-            fig = plt.figure( figsize=(12, 6.75)  )
+            # used to be 12, 6.75
+            fig = plt.figure( figsize=(16, 9)  )
             axs = [ fig.add_subplot( 1, 3, i + 1, projection="3d" ) for i in range(3) ]
             plt.subplots_adjust( bottom = 0.3,
                                  right = 0.95,
@@ -391,3 +410,13 @@ def run( astData, plots, export ):
                 plt.show( block=True )
                 fig.show()
 
+
+        COI = getClusters( unnorm, db, isoResults, labels, astName, astData.dataCols, export )
+        for cluster in COI:
+            clusterData = fetchDataForCluster( cluster, untrimmed, labels, astName, astData.dataCols, export )
+            if export:
+                out.exportFile( 3, str(astName) + "cluster" + str(cluster) + "Data", clusterData[ astData.dataCols ] )
+            else:
+                out.screenDisplay( clusterData[ astData.dataCols ], "Cluster " + str(cluster) + " Data" )
+        # if ( stamps ):
+        #     postage.fromDF( clusterData )
