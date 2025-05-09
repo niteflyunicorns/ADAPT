@@ -12,7 +12,7 @@ from tabulate import tabulate
 
 # getAllObs: takes an asteroid and it's data and prints
 # or exports each row in a nice neatly formatted way.
-def getAll( name, data, cols, exportFlg ):
+def getAll( name, data, cols, filepath, exportFlg ):
     header = "Asteroid " + str(name) + ": All Observations"
     tail = "\n"
     # for row in data:
@@ -26,7 +26,7 @@ def getAll( name, data, cols, exportFlg ):
         # print( miniDF )
         print( tabulate( miniDF, headers='keys', tablefmt='simple_outline' ) ) 
     else:
-        filename = "ast" + str(name) + "_allObs"
+        filename = filepath + "ast" + str(name) + "_allObs"
         out.exportFile( 3, filename, miniDF )
 
 
@@ -43,7 +43,9 @@ def getSelect( name, obsToGet, data, cols, exportFlg ):
         print( "Asteroid " + str( name ) + ":" )
         print( tabulate( newDF, headers='keys', tablefmt='simple_outline' ) ) 
     else:
-        filename = "ast" + str(name) + "_selectObs"
-        out.exportFile( 3, filename, newDF )
+        pass
+        # for now taking this out because otherwise hybrid outputs everything twice.
+        # filename = filepath + "ast" + str(name) + "_selectObs"
+        # out.exportFile( 3, filename, newDF )
 
     return df
