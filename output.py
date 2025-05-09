@@ -22,15 +22,15 @@ See the README.md for more information."
 ### Inputs: file type (number 1, 2, 3), file name, data to export
 ### Returns: none
 #########################################################################################
-def exportFile( fileType, filename, data ):
-    print( "Exporting data...\n" )
+def exportFile( fileType, filename, data, hdr='keys' ):
+    # print( "Exporting data...\n" )
     if fileType == 1:
         data.to_html( buf=filename, index=False )
     if fileType == 2:
         data.to_csv( filename, index=False )
     if fileType == 3: # normal text file
         with open( filename + ".txt", 'w' ) as f:
-            f.write( tabulate( data, headers='keys', tablefmt='simple_outline' ) )
+            f.write( tabulate( data, headers=hdr, tablefmt='simple_outline' ) )
             f.write( "\n" )
 
 
@@ -48,10 +48,10 @@ def help( ):
 ### Inputs: data, title header
 ### Returns: none (prints help message on screen)
 #########################################################################################
-def screenDisplay( data, header ):
+def screenDisplay( data, title, hdr='keys' ):
     print( "\n\n" )
-    print( header + ( '-' * 50 ) )
-    tabulate( data, headers='keys', tablefmt='simple_outline' )
+    print( title + ( '-' * 50 ) )
+    tabulate( data, headers=hdr, tablefmt='simple_outline' )
     print( "\n" )
 
 
