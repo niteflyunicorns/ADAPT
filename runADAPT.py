@@ -17,6 +17,7 @@ import random as rand
 import pdb
 import sys
 import configparser as cfp
+import csv
 #from line_profiler import profile
 # custom py file imports
 # import asteroidMenuClass as menu
@@ -52,7 +53,7 @@ fltrTypeMsg = \
 # rb (real-bogus ): value to represent the "validity" or "trustworthiness" of the
 # collected data
 # H: another measurement of brightness
-wantedAttrs = [ "elong", "rb", "H", "mag18omag8" ] # attributes we want to look at
+wantedAttrs = [ "elong", "rb", "jd", "mag18omag8" ] # attributes we want to look at
 # wantedAttrs = [ ]
 dataCols = wantedAttrs.copy()
 dataCols.extend( [ 'jd', 'id', 'ssnamenr' ] ) # additional cols needed for processing
@@ -85,6 +86,11 @@ def leave( ):
     print( "Thank you for using SNAPS!\n" )
 
 
+def getAstNamesFromFile( astData, filename ):
+    with open( filename, newline='' ) as f:
+        reader = csv.reader( f )
+        csvList = [ int( row[ 0 ] ) for row in reader if row ]
+        astData.names += csvList
 # this function has been commented out because there is a potential error
 # later in the code that may require this to be reintroduced in some form
 # # function for stripping data of all 0 entries
@@ -142,15 +148,18 @@ def main( ):
     fltr = [ fltrType, fltrLvl ]
     plots = sys.argv[ 5 ]
     exportFlg = sys.argv[ 6 ]
-    # wantedAttrs = sys.argv[ 7 ]
+    # fromFile = sys.argv[ 7 ]
+    # wantedAttrs = sys.argv[ 8 ]
     
     # defaults of these for the versions that don't set them themselves
     exportArgs = [2, ""]
     astArgs = [0, 'n', 0, 0]
+    exportFile = ""
 
     # annoying handling of boolean inputs - may change this later
     exportFlg = [ False, True ][ exportFlg.lower()[0] == "t" ]
     plots = [ False, True ][ plots.lower()[0] == "t" ]
+    # fromFile = [ False, True ][ fromFile.lower()[0] == "t" ]
 
     # initialize astData object and some variables
     astData = AstData()
@@ -166,9 +175,17 @@ def main( ):
     else:
         # out.help()
         if exportFlg:
+            # if not fromFile:
             exportArgs = [ int( sys.argv[ 7 ] ),
                            sys.argv[ 8 ] ]
+            exportFile = sys.argv[ 8 ]
             astData.setAstNames()
+            # elif fromFile:
+            #     exportArgs = [ int( sys.argv[ 8 ] ),
+            #                    sys.argv[ 9 ] ]
+            #     exportFile = sys.argv[ 9 ]
+            #     filename = sys.argv[ 10 ]
+            #     getAstNamesFromFile( astData, filename )
             if maxIn == 1:
                 astArgs = [ int( sys.argv[ 9 ] ),
                             sys.argv[ 10 ],
@@ -189,11 +206,11 @@ def main( ):
             multAst.run( astData, exportFlg, exportArgs, fltr, plots )
             
     elif fltrType == "dbscan":
-        dbscan.runDBSCAN( astData, plots, exportFlg )
+        dbscan.runDBSCAN( astData, plots, exportFile, exportFlg )
     elif fltrType == "isoforest":
-        forest.runIForest( astData, plots, exportFlg )
+        forest.runIForest( astData, plots, exportFile, exportFlg )
     elif fltrType == "mix":
-        hybrid.run( astData, plots, exportFlg )
+        hybrid.run( astData, plots, exportFile, exportFlg )
     else:
         print("ERROR: Incorrect filter type given. Please choose from the following:" )
         print( fltrTypeMsg )
