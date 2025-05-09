@@ -39,37 +39,48 @@ def preProcess( astData, name ):
     trainData, testData  = train_test_split( dataArray, random_state=42 )
     # normData = scaler.fit_transform( dataArray )
     return sortedDF, trainData, testData 
-    
 
-def runIForest( astData, plots, export ):
+
+def fetchDataForCluster( clusterNum, data, labels, name, cols, exportFlg ):
+    clusterData = data[ labels == clusterNum ]
+    data = getObs.getSelect( name, clusterData, data, cols, exportFlg )
+    return data
+
+
+def runIForest( astData, plots, exportFile, export ):
     names = astData.names
     for astName in names:
         untrimmed, trainData, testData = preProcess( astData, astName )
         features = untrimmed[ feats ]
 
         state = 0 # starting point
-        samples = 100 # starting point
 
         tune = False
         stamps = False
         if tune:
             paramTune( astData, astName, plots, export )
         else:
-            clf = IsolationForest( max_samples=samples, random_state=state )
-            clf.fit( trainData )
+            clf = IsolationForest( random_state=state )
+            clf.fit( features )
             trimmed = untrimmed.loc[ features.index ].copy()
             trimmed[ 'anomalyScore' ] = clf.decision_function( features )
             trimmed[ 'anomaly' ] = clf.predict( features )
 
+            anomData = trimmed[ trimmed[ 'anomaly' ] == -1 ]
+            normData = trimmed[ trimmed[ 'anomaly' ] == 1 ]
+                
             if ( plots ):
                 plotIForest( trimmed, astName, export )
 
             if ( export ):
-                pass
-                # out.exportFile( 3, str(astName) + "clusterData", clusterData )
+                filename = exportFile + "isoforest/" + str(astName) 
+                out.exportFile( 3, filename + "-anomaly", anomData[ astData.dataCols ] )
+                out.exportFile( 3, filename + "-normal", normData[ astData.dataCols ] )
             else:
                 pass
-                # out.screenDisplay( clusterData, "Cluster Data" )
+                # currently screenDisplay is not working
+                # out.screenDisplay( normData[ astData.dataCols ], "Normal Data" )
+                # out.screenDisplay( anomData[ astData.dataCols ], "Anomalous Data" )
 
             if ( stamps ):
                 postage.fromDF( clusterData )
@@ -100,8 +111,18 @@ def plotIForest( data, astName, export ):
     fig = plt.figure()
     ax = fig.add_subplot( projection="3d" )
 
-    ax.scatter( normal[ "elong" ], normal[ "rb" ], normal[ "mag18omag8" ], label='Normal' )
-    ax.scatter( anomalies[ "elong" ], anomalies[ "rb" ], anomalies[ "mag18omag8" ], label='Anomaly' )
+    ax.scatter( normal[ "elong" ],
+                normal[ "rb" ],
+                normal[ "mag18omag8" ],
+                label='Normal',
+                c="lightcoral",
+                edgecolors="k", s=100 )
+    ax.scatter( anomalies[ "elong" ],
+                anomalies[ "rb" ],
+                anomalies[ "mag18omag8" ],
+                label='Anomaly',
+                c="k",
+                edgecolors="k", s=40 )
 
     ax.set_xlabel( "elong" )    
     ax.set_ylabel( "rb" )
@@ -111,9 +132,9 @@ def plotIForest( data, astName, export ):
     
 
     if export:
-        filePath = "/home/sjc497/ADAPT/pngs/"
+        filePath = "/scratch/sjc497/ADAPT/pngs/isoforest/"
         fig.savefig( filePath + str(astName) + "iforest" + ".png" )
-        plt.close()
+        # plt.close()
     else:
         # doesn't work right now -- need to figure out what correct data to pass is.
         # cursor = mplcursors.cursor( hover=True )
@@ -121,9 +142,3 @@ def plotIForest( data, astName, export ):
         plt.show( block=True )
         fig.show()
 
-
-
-def fetchDataForCluster( clusterNum, data, labels, name, cols, exportFlg ):
-    clusterData = data[ labels == clusterNum ]
-    data = getObs.getSelect( name, clusterData, data, cols, exportFlg )
-    return data
