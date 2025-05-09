@@ -41,6 +41,8 @@ class AstData():
 
     def setAstNames( self ):
         tempNames = pd.DataFrame( asteroidData.find( {},{ '_id': 0, 'ssnamenr': 1 } ) )
+        if self.maxIn == -1:
+            self.setMaxIn( tempNames.size )
         for idx in range(self.offset, self.offset + self.maxIn ):
             self.names.append( tempNames["ssnamenr"][ idx ] )
 
@@ -51,10 +53,7 @@ class AstData():
             self.offset = value
 
     def setMaxIn( self, value=-1 ):
-        if value < 0:
-            self.maxIn = self.names.size
-        else:
-            self.maxIn = value
+        self.maxIn = value
             
     def sort( self, data, sortBy ):
         return data.sort_values( by = [ sortBy ] )
