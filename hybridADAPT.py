@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import matplotlib.patches as mpatches
 import mplcursors
+import colorsys
 
 ## Custom Imports ##
 from mongoConnection import Mongo
@@ -26,7 +27,11 @@ import getPostage as postage
 import output as out
 
 ## Global Variables ##
-feats = [ "elong", "rb", "mag18omag8" ]
+# feats = [ "elong", "rb", "mag18omag8" ]
+feats = [ "diffmaglim", "magpsf", "sigmapsf", "chipsf",
+          "magap", "sigmagap", "magapbig", "sigmagapbig",
+          "magnr", "fwhm", "elong", "rb",
+          "ssdistnr", "ssmagnr", "H", "mag18omag8" ]
 colors = { "light": [ "lightcoral", "bisque","khaki",
                       "darkseagreen", "lightgreen",
                       "aquamarine", "aqua",
@@ -38,6 +43,29 @@ colors = { "light": [ "lightcoral", "bisque","khaki",
                      "steelblue", "darkblue", 
                      "indigo", "darkmagenta", "deeppink" ],
            "noise": [ "gray", "black" ] }
+
+
+def generateMoreColors( n_clusters, colormap_name="hsv" ):
+    cmap = plt.get_cmap(colormap_name)
+    baseColors = [cmap(i % cmap.N) for i in range(n_clusters)]
+
+    lights = []
+    darks = []
+
+    for rgba in baseColors:
+        # Convert RGBA to HLS
+        r, g, b = rgba[:3]
+        h, l, s = colorsys.rgb_to_hls(r, g, b)
+
+        # Light version (higher lightness)
+        light_rgb = colorsys.hls_to_rgb(h, min(1.0, l + 0.3), s)
+        lights.append(light_rgb)
+
+        # Dark version (lower lightness)
+        dark_rgb = colorsys.hls_to_rgb(h, max(0.0, l - 0.3), s)
+        darks.append(dark_rgb)
+
+    return lights, darks
 
 
 def float_range( start, stop, step, precision=2 ):
@@ -59,24 +87,35 @@ def preProcess( astData, name, process ):
         return sortedDF, trainData, testData
 
     
-def getClusters( data, dbData, isoData, labels, name, cols, exportFlg ):
+def getClusters( data, isoData, labels ):
     # pass
     # get labels for clusters that overlap between db and iso
     # filter overlapping clusters by threshold of iso to non-iso
+    # returns anomalous = True if asteroid meets criteria:
+    # has > 2 non-noise clusters with >50% of points flagged by both algorithms
     clusters = []
+    anomCount = 0
+    anomalous = False
     for k in labels:
-       dbMask = labels == k
-       isoMask = isoData == -1
+        dbMask = labels == k
+        isoMask = isoData == -1
 
-       mixClust = data[ dbMask & isoMask ]
-       dbClust = data[ dbMask ]
-       mixSize = len( mixClust )
-       dbSize = len( dbClust )
+        mixClust = data[ dbMask & isoMask ]
+        dbClust = data[ dbMask ]
+        mixSize = len( mixClust )
+        dbSize = len( dbClust )
 
-       if ( mixSize / dbSize ) > 0.5:
-           clusters.append( k )
+        # for 3 properties
+        # if ( mixSize / dbSize ) > 0.5 and k != -1 and k not in clusters:
+        # for "all" properties
+        if ( mixSize / dbSize ) > 0.25 and k != -1 and k not in clusters:
+            clusters.append( k )
+            anomCount += 1
 
-    return clusters
+        if anomCount >= 2:
+            anomalous = True
+
+    return clusters, anomalous
     # return list of cluster labels for clusters that have:
     # more than 50% of their points flagged by both db and iso
 
@@ -86,6 +125,55 @@ def fetchDataForCluster( clusterNum, data, labels, name, cols, exportFlg ):
     data = getObs.getSelect( name, clusterData, data, cols, exportFlg )
     return data
 
+def paramTuneDBSCAN( astData, astName, plots, export ):
+    maxScore, goodE, goodPts = 0, 0, 0
+    maxScore = 0
+    untrimmed, unnorm, data = preProcess( astData, astName )
+    for e in float_range( 5, 10.5, 0.5 ): # unnormalized range
+        for minPts in range( 5, 9, 2 ):
+            score = 0
+            db = DBSCAN(eps=e, min_samples=minPts ).fit( unnorm )
+            labels = db.labels_
+            clusters = db.fit_predict(data)
+            clusterSizes = Counter( clusters )
+
+            noise = list( labels ).count( -1 )
+            noisePercent = ( noise / len( labels ) ) * 100
+            n_clusters = len( set( labels ) ) - ( 1 if -1 in labels else 0 )
+            # score results so that we only output one result. 
+            if 2 <= n_clusters <= 10:
+                score += 2
+            elif 10 < n_clusters <= 20:
+                score += 1
+            else:
+                score -= 1
+
+            if 5.0 <= noisePercent <= 30.0:
+                score += 2
+            else:
+                score -= 1
+
+            if score > maxScore:
+                maxScore = score
+                goodE = e
+                goodPts = minPts
+    if ( plots ) and goodE != 0 and goodPts != 0:
+        extraStuff = [ goodPts, goodE, clusterSizes ]
+        plotDBSCAN( ax, labels, db, extraStuff, unnorm, astName, export )
+        
+    # untrimmed, unnorm, data = preProcess( astData )
+
+    # for e in float_range( 0.01, 0.1, 0.01 ):
+    #     for minPts in range( 3, 10, 1):
+    #         db = DBSCAN(eps=e, min_samples=minPts ).fit( data )
+    #         labels = db.labels_
+    #         clusters = db.fit_predict(data)
+    #         clusterSizes = Counter( clusters )
+
+    #         if ( plots ):
+    #             extraStuff = [ minPts, e, clusterSizes ]
+    #             plotDBSCAN( ax, labels, db, extraStuff, unnorm, astName, export )
+
 
 def plotDBSCAN( ax, labels, db, extras, data, astName, export ):
     minPts, e, clusterSizes = extras
@@ -93,9 +181,15 @@ def plotDBSCAN( ax, labels, db, extras, data, astName, export ):
     core_samples_mask = np.zeros_like(labels, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     legendEntries = []
-
+    
     n_clusters_ = len( set( labels ) ) - ( 1 if -1 in labels else 0 )
     n_noise_ = list( labels ).count( -1 )
+
+    if n_clusters_ > 12:
+        moreLight, moreDark = generateMoreColors( n_clusters_ - 12 )
+        colors[ "light" ] += moreLight
+        colors[ "dark" ] += moreDark
+
 
     for k, col in zip(unique_labels, colors[ "light" ]):
         if k == -1:
@@ -176,6 +270,11 @@ def plotMIX( ax, labels, db, extras, data, isoResults, astName, export ):
     clustColors = colors[ "light" ]
     anomColors = colors[ "dark" ]
 
+    if n_clusters_ > 12:
+        moreLight, moreDark = generateMoreColors( n_clusters_ - 12 )
+        colors[ "light" ] += moreLight
+        colors[ "dark" ] += moreDark
+
     for k in set( labels ):
         if k == -1:
             col = colors[ "noise" ][ 0 ]
@@ -249,8 +348,12 @@ def plotMIX( ax, labels, db, extras, data, isoResults, astName, export ):
     return legendEntries, legendEntries2
 
     
-def run( astData, plots, export ):
+def run( astData, plots, exportFile, export ):
     names = astData.names
+    filepath = "/scratch/sjc497/ADAPT/pngs/hybrid/"
+    astList = []
+    tune = False
+    stamps = False    
     for astName in names:
         ###############################################################################
         ### ISOLATION FOREST CODE ###
@@ -259,34 +362,19 @@ def run( astData, plots, export ):
         features = untrimmed[ feats ]
 
         state = 0 # starting point
-        samples = 100 # starting point
 
-        tune = False
-        stamps = False
-        if tune:
-            paramTune( astData, astName, plots, export )
-        else:
-            clf = IsolationForest( max_samples=samples, random_state=state )
-            clf.fit( trainData )
-            trimmed = untrimmed.loc[ features.index ].copy()
-            trimmed[ 'anomalyScore' ] = clf.decision_function( features )
-            trimmed[ 'anomaly' ] = clf.predict( features )
-            isoResults = trimmed[ 'anomaly' ]
+        # if tune:
+        #     paramTune( astData, astName, plots, export )
+        # else:
+        clf = IsolationForest( random_state=state )
+        clf.fit( features )
+        trimmed = untrimmed.loc[ features.index ].copy()
+        trimmed[ 'anomalyScore' ] = clf.decision_function( features )
+        trimmed[ 'anomaly' ] = clf.predict( features )
+        isoResults = trimmed[ 'anomaly' ]
 
-            # if ( plots ):
-            #     plotIForest( trimmed, astName, export )
-
-            # if ( export ):
-            #     pass
-            #     # out.exportFile( 3, str(astName) + "clusterData", clusterData )
-            # else:
-            #     pass
-            #     # out.screenDisplay( clusterData, "Cluster Data" )
-
-            # if ( stamps ):
-            #     postage.fromDF( clusterData )
-
-
+        # exporting iso results
+        # getObs.getAll( astName, untrimmed, astData.dataCols, exportFile + "isoforest/", export )
         ###############################################################################
         ### DBSCAN CODE ###
         ### run dbscan and get clusters
@@ -295,22 +383,26 @@ def run( astData, plots, export ):
         e = 0.04 # starting point
         minPts = 3 # starting point
 
-        tune = False
-        stamps = False
         if tune:
-            paramTune( astData, astName, plots, export )
+            paramTuneDBSCAN( astData, astName, plots, export )
         else:
             db = DBSCAN(eps=e, min_samples=minPts ).fit( data )
             labels = db.labels_
             clusters = db.fit_predict(data)
             clusterSizes = Counter( clusters )
 
-            if ( plots ):
-                extraStuff = [ minPts, e, clusterSizes ]
-                # plotDBSCAN( labels, db, extraStuff, unnorm, astName, export )
+            extraStuff = [ minPts, e, clusterSizes ]
 
-            getObs.getAll( astName, untrimmed, astData.dataCols, export )
-
+                
+        # Exporting DBSCAN results
+        # getObs.getAll( astName, untrimmed, astData.dataCols, exportFile + "dbscan/", export )
+        # for cluster in clusters:
+        #     clusterData = fetchDataForCluster( cluster, untrimmed, labels, astName, astData.dataCols, export )
+        #     if export:
+        #         filename = exportFile + "dbscan/" + str(astName) + "-dbscan-cluster" + str(cluster)
+        #         out.exportFile( 3, filename , clusterData[ astData.dataCols ] )
+        #     else:
+        #         out.screenDisplay( clusterData[ astData.dataCols ], "Cluster " + str(cluster) + " Data" )
 
         ###############################################################################
         ### HYBRID CODE ###
@@ -320,16 +412,15 @@ def run( astData, plots, export ):
         ### Low anomaly: anomalies in IsoForest that are in big clusters in DBSCAN
         ### No anomaly?: big clusters in DBSCAN or normal rankings in IsoForest
 
-
         if plots:
             # setup
-            # used to be 12, 6.75
-            fig = plt.figure( figsize=(16, 9)  )
+            fig = plt.figure( figsize=(12, 6.75)  )
             axs = [ fig.add_subplot( 1, 3, i + 1, projection="3d" ) for i in range(3) ]
             plt.subplots_adjust( bottom = 0.3,
                                  right = 0.95,
                                  left = 0,
                                  wspace = 0.15 )
+
 
 
             # plot 3 subplots
@@ -399,24 +490,35 @@ def run( astData, plots, export ):
                         title_fontsize=11 )
             mixLegend2.get_frame().set_edgecolor("black")
 
-            fig.set_dpi(300)
-
+            plt.rcParams['figure.dpi'] = 300
+            
             if export:
-                ext = "(" + str(minPts) + "-" + str(e) + ")"
-                filePath = "/home/sjc497/ADAPT/pngs/hybrid/"
-                fig.savefig( filePath + str(astName) + "hybrid" + ext + ".png" )
+                ext = str(minPts) + "-" + str(e)
+                fig.savefig( filepath + str(astName) + "hybrid" + ext + ".png" )
                 plt.close()
             else:
                 plt.show( block=True )
                 fig.show()
 
 
-        COI = getClusters( unnorm, db, isoResults, labels, astName, astData.dataCols, export )
+        getObs.getAll( astName, untrimmed, astData.dataCols, exportFile + "hybrid/", export )
+        COI, anomFlg = getClusters( unnorm, isoResults, labels )
+        if anomFlg:
+            astList.append( [ astName, "Y", COI ] )
+        else:
+            astList.append( [ astName, "N", COI ] )
         for cluster in COI:
             clusterData = fetchDataForCluster( cluster, untrimmed, labels, astName, astData.dataCols, export )
             if export:
-                out.exportFile( 3, str(astName) + "cluster" + str(cluster) + "Data", clusterData[ astData.dataCols ] )
+                filename = exportFile + "hybrid/" + str(astName) + "-hybrid-cluster" + str(cluster)
+                out.exportFile( 3, filename , clusterData[ astData.dataCols ] )
             else:
                 out.screenDisplay( clusterData[ astData.dataCols ], "Cluster " + str(cluster) + " Data" )
         # if ( stamps ):
         #     postage.fromDF( clusterData )
+    headers = [ "Name", "Interesting?", "Clusters" ]
+    astList = sorted( astList, key=lambda row: row[ 1 ], reverse=True )
+    if export:
+        out.exportFile( 3, exportFile + "hybrid/interestingAsteroids", astList, headers )
+    else:
+        out.screenDisplay( astList, "Anomalous Asteroids:\n", headers )
