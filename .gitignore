@@ -12,7 +12,6 @@ __pycache__/
 *.lprof
 
 # ignore data files
-*.png
 *.html
 *.csv
 data/*
