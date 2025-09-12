@@ -28,10 +28,14 @@ def exportFile( fileType, filename, data, hdr='keys' ):
         data.to_html( buf=filename, index=False )
     if fileType == 2:
         data.to_csv( filename, index=False )
-    if fileType == 3: # normal text file
+    if fileType == 3: # "fancy" text file
         with open( filename + ".txt", 'w' ) as f:
             f.write( tabulate( data, headers=hdr, tablefmt='simple_outline' ) )
             f.write( "\n" )
+    if fileType == 4: # normal text file (no special formatting)
+        with open( filename + ".txt", 'w' ) as f:
+            for item in data:
+                f.write( f"{item}\n" )
 
 
 #########################################################################################
