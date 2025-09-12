@@ -26,10 +26,18 @@ def getAll( name, data, cols, filepath, exportFlg ):
         # print( miniDF )
         print( tabulate( miniDF, headers='keys', tablefmt='simple_outline' ) ) 
     else:
+        ztfList = getAllZTF( name, data )
         filename = filepath + "ast" + str(name) + "_allObs"
         out.exportFile( 3, filename, miniDF )
+        out.exportFile( 4, filepath + "ast" + str(name) + "ztfIds", ztfList )
 
 
+def getAllZTF( name, data ):
+    ztfidsDF = data[ [ "id" ] ]
+    ztfArr = ztfidsDF.to_numpy()
+    ztfList = [ x[0] for x in ztfArr.tolist() ]
+    return ztfList
+        
 
 def getSelect( name, obsToGet, data, cols, exportFlg ):
     header = "Asteroid " + str(name) + ": All Observations"

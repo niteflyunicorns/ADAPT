@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=adapt  #the name of your job
+#SBATCH --job-name=13302adapt  #the name of your job
 
 #change to your NAUID
-#SBATCH --output=/scratch/sjc497/adapt-isoforest-timing100New2.out #this is the file for stdout 
-#SBATCH --error=/scratch/sjc497/adapt-isoforest-timing100New2.err #this is the file for stderr
+#SBATCH --output=/scratch/sjc497/adapt-hybrid13302.out #this is the file for stdout 
+#SBATCH --error=/scratch/sjc497/adapt-hybrid13302.err #this is the file for stderr
 
 #SBATCH --time=00:10:00
 #SBATCH --mem=8GB
@@ -17,7 +17,7 @@ offset=1000
 # file="/home/sjc497/ADAPT/astNames.csv"
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType='isoforest'
+fltrType='mix'
 # ^ fltrType can be one of:
 # 'anomaly', 'dbscan', 'isoforest', 'mix'
 fltrLvl=2
@@ -28,7 +28,7 @@ exportFlg=True
 # optional variables:
 fileType=2 # default 2 (.csv)
 fileName="/scratch/sjc497/ADAPT/data/" # default ""
-astName=2156 # default 0
+astName=6478 # default 0
 featFltr=n # default n
 lB=0 # default 0
 uB=0 # default 0

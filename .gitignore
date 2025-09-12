@@ -15,3 +15,6 @@ __pycache__/
 *.html
 *.csv
 data/*
+
+# ignore test files
+test/*
