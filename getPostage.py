@@ -3,6 +3,7 @@
 # Savannah Chappus
 # 10.22.2024
 
+### IMPORTS ######################################################################
 import os
 import sys
 import pandas as pd
@@ -11,6 +12,9 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.visualization import ZScaleInterval
 import numpy as np
+
+## Custom imports ##
+from mongoConnection import Mongo
 
 
 urlPrefix = "https://avro.alerce.online/get_stamp?oid="
@@ -79,6 +83,17 @@ def fromDF( data ):
                     plt.axis("off")
                     plt.savefig( f"{ztfID}.png", bbox_inches="tight", pad_inches=0, dpi=150 )
                     plt.close()
+
+
+# def fromMongo( astName, jd ):
+    ## TODO: Do this later
+    ## make mongo connection
+    # db = Mongo.fetchDatabase( 'postageStamps' )
+    # stamps = db[ 'availableObjects' ]
+    # astStamps = stamps.find( {"ssnamenr": astName } )
+    ## find imgs by string
+    ## save them locally
+    
     
 def main():
     if len( sys.argv ) > 1:
