@@ -84,7 +84,10 @@ def runKNN( astData, plots, exportFile, export ):
             paramTune( astData, astName, plots, export )
         else:
             nbrs = NearestNeighbors( n_neighbors=k+1 ).fit( data )
+            # get the distances between each point and their K neighbors
             distances, _ = nbrs.kneighbors( data )
+            # get the average distance from the point to its K neighbors
+            # smaller number -> denser region, larger number -> sparser region
             densityScores = distances[:, 1:].mean( axis=1 )
 
             if ( plots ):

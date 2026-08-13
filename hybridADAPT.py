@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import matplotlib.patches as mpatches
 import mplcursors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import colorsys
 
 ## Custom Imports ##
@@ -28,11 +29,11 @@ import getPostage as postage
 import output as out
 
 ## Global Variables ##
-# feats = [ "elong", "rb", "mag18omag8" ]
-feats = [ "diffmaglim", "magpsf", "sigmapsf", "chipsf",
-          "magap", "sigmagap", "magapbig", "sigmagapbig",
-          "magnr", "fwhm", "elong", "rb",
-          "ssdistnr", "ssmagnr", "H", "mag18omag8" ]
+feats = [ "elong", "rb", "mag18omag8" ]
+# feats = [ "diffmaglim", "magpsf", "sigmapsf", "chipsf",
+#           "magap", "sigmagap", "magapbig", "sigmagapbig",
+#           "magnr", "fwhm", "elong", "rb",
+#           "ssdistnr", "ssmagnr", "H", "mag18omag8" ]
 colors = { "light": [ "lightcoral", "bisque","khaki",
                       "darkseagreen", "lightgreen",
                       "aquamarine", "aqua",
@@ -95,7 +96,7 @@ def chooseK( data ):
     return k
 
 
-def getClusters( data, isoData, labels ):
+def getClusters( data, isoData, labels, densities ):
     # pass
     # get labels for clusters that overlap between db and iso
     # filter overlapping clusters by threshold of iso to non-iso
@@ -107,6 +108,9 @@ def getClusters( data, isoData, labels ):
     for k in labels:
         dbMask = labels == k
         isoMask = isoData == -1
+        # denseMask = densities >= np.percentile( densities, 90 ) # highest 10%
+        clustDensities = densities[ labels == k ]
+        avgClustDensity = np.mean( clustDensities )
 
         mixClust = data[ dbMask & isoMask ]
         dbClust = data[ dbMask ]
@@ -114,9 +118,10 @@ def getClusters( data, isoData, labels ):
         dbSize = len( dbClust )
 
         # for 3 properties
-        # if ( mixSize / dbSize ) > 0.5 and k != -1 and k not in clusters:
+        # and avgClustDensity > 0.035 
+        if ( mixSize / dbSize ) > 0.5 and avgClustDensity > 0.035 and k != -1 and k not in clusters:
         # for "all" properties
-        if ( mixSize / dbSize ) > 0.25 and k != -1 and k not in clusters:
+        # if ( mixSize / dbSize ) > 0.25 and k != -1 and k not in clusters:
             clusters.append( k )
             anomCount += 1
 
@@ -238,7 +243,7 @@ def plotDBSCAN( ax, labels, db, extras, data, astName, export ):
                      f"Noise: {noisePercent:.2f}%\n"
                      f"MinPts: {minPts}\n"
                      f"Epsilon: {e}" )
-
+    
     return metadataText, legendEntries
 
    
@@ -279,7 +284,6 @@ def plotKNN( ax, k, densityScores, data, astName, export ):
     ax.set_xlabel( "elong" )    
     ax.set_ylabel( "rb" )
     ax.set_zlabel( "mag18omag8" )
-    ax.set_title(f"{astName}")
 
     ax.set_xlim(np.min(data[:, 0]), np.max(data[:, 0]))
     ax.set_ylim(np.min(data[:, 1]), np.max(data[:, 1]))
@@ -311,7 +315,7 @@ def plotKNN( ax, k, densityScores, data, astName, export ):
     # cbar.ax.set_xlabel( 'kNN density', labelpad=10 )
     # cbar.ax.xaxis.set_label_position( 'top' )
 
-    return metadataText
+    return metadataText, scplt
 
 
 
@@ -342,10 +346,11 @@ def plotMIX( ax, labels, db, extras, data, isoResults, knnDensities, astName, ex
 
         class_member_mask = labels == k
         anomaly_mask = isoResults == -1
-        dense_mask = knnDensities >= np.percentile( knnDensities, 90 ) # highest 10%
+        # dense_mask = knnDensities >= np.percentile( knnDensities, 90 ) # highest 10%
 
         # core normal
-        xyz = data[class_member_mask & core_samples_mask & ( ~anomaly_mask | ~dense_mask )]
+        # xyz = data[class_member_mask & core_samples_mask & ( ~anomaly_mask | ~dense_mask )]
+        xyz = data[class_member_mask & core_samples_mask & ~anomaly_mask ]
         ax.scatter(
             xyz[:, 0],
             xyz[:, 1],
@@ -356,7 +361,8 @@ def plotMIX( ax, labels, db, extras, data, isoResults, knnDensities, astName, ex
         )
 
         # core anomaly + high density -- desirable clusters
-        xyz = data[class_member_mask & core_samples_mask & anomaly_mask & dense_mask]
+        # xyz = data[class_member_mask & core_samples_mask & anomaly_mask & dense_mask]
+        xyz = data[class_member_mask & core_samples_mask & anomaly_mask]
         ax.scatter(
             xyz[:, 0],
             xyz[:, 1],
@@ -367,7 +373,8 @@ def plotMIX( ax, labels, db, extras, data, isoResults, knnDensities, astName, ex
         )
 
         # border normal
-        xyz = data[class_member_mask & ~core_samples_mask & ( ~anomaly_mask | ~dense_mask )]
+        # xyz = data[class_member_mask & ~core_samples_mask & ( ~anomaly_mask | ~dense_mask )]
+        xyz = data[class_member_mask & ~core_samples_mask & ~anomaly_mask]        
         ax.scatter(
             xyz[:, 0],
             xyz[:, 1],
@@ -378,7 +385,8 @@ def plotMIX( ax, labels, db, extras, data, isoResults, knnDensities, astName, ex
         )
 
         # border anomaly
-        xyz = data[class_member_mask & (~core_samples_mask) & anomaly_mask & dense_mask]
+        # xyz = data[class_member_mask & (~core_samples_mask) & anomaly_mask & dense_mask]
+        xyz = data[class_member_mask & (~core_samples_mask) & anomaly_mask]
         ax.scatter(
             xyz[:, 0],
             xyz[:, 1],
@@ -488,19 +496,21 @@ def run( astData, plots, exportFile, export ):
 
         if plots:
             # setup
-            fig = plt.figure( figsize=(12, 6.75)  )
+            fig = plt.figure( figsize=(14, 8)  )
             axs = [ fig.add_subplot( 2, 2, i + 1, projection="3d" ) for i in range(4) ]
-            plt.subplots_adjust( bottom = 0.3,
-                                 right = 0.95,
-                                 left = 0,
-                                 wspace = 0.15 )
+            plt.subplots_adjust(
+                top = .955,
+                bottom = 0.125,
+                right = 0.745,
+                left = 0.175,
+                wspace = 0 )
 
 
 
             # plot 3 subplots
             dbMetadataTxt, dbLegEntries = plotDBSCAN( axs[0], labels, db, extraStuff, unnorm, astName, export )
             isoMetadataTxt = plotISO( axs[1], trimmed, astName, export )
-            knnMetadataTxt = plotKNN( axs[2], k, densityScores, unnorm, astName, export )
+            knnMetadataTxt, sc = plotKNN( axs[2], k, densityScores, unnorm, astName, export )
             mixLegEntries, mixLegEntries2 = plotMIX(axs[3], labels, db, extraStuff, unnorm, isoResults, densityScores, astName, export )
 
             # tuning plots and adding legends
@@ -519,7 +529,7 @@ def run( astData, plots, exportFile, export ):
 
             ## DBSCAN LEGENDS ############
             # clusters & noise, top left
-            fig.text( 0.007, 0.98,
+            fig.text( 0.11, 0.98,
                       dbMetadataTxt,
                       fontsize=10,
                       verticalalignment='top',
@@ -527,38 +537,59 @@ def run( astData, plots, exportFile, export ):
 
             # cluster color & num pts, top left (under previous)
             dbLegend = fig.legend( handles=dbLegEntries,
-                        loc="outside left lower",
-                        bbox_to_anchor=( 0, 0 ),
+                        loc="outside left upper",
+                        bbox_to_anchor=( 0.005, 1 ),
                         title="Cluster Sizes",
                         fontsize=10,
                         title_fontsize=11 )
             dbLegend.get_frame().set_edgecolor("black")
 
+            ## KNN LEGENDS ###############
+            # bottom left
+            fig.text( 0.09, 0.02,
+                      knnMetadataTxt,
+                      fontsize=10,
+                      verticalalignment='bottom',
+                      horizontalalignment='left',
+                      bbox=dict( boxstyle="round,pad=0.3", edgecolor="black", facecolor="white" ) )
 
+            divider = make_axes_locatable( ax )
+            cax = fig.add_axes( [0.05, 0.01, 0.03, 0.6] )
+            # cbar = fig.colorbar( sc, cax=cax )
+            
+
+            cbar = fig.colorbar(
+                sc,
+                cax=cax,                 # attach to all axes
+                location='left',        # place on left side
+                pad=0.02,
+                fraction=0.03,
+                shrink=0.35,
+                anchor=(0.0,0.15)
+            )
+
+            cbar.set_label("kNN density", rotation=90, labelpad=5)
+            
+            # knnLegend = fig.legend( loc="outside left lower",
+            #             bbox_to_anchor=( 0, 0.12 ) )
+            # knnLegend.get_frame().set_edgecolor("black")
+
+            
             ## ISO LEGENDS ###############
-            fig.text( 0.5, 0.05,
+            # top right
+            fig.text( 0.99, 0.98,
                       isoMetadataTxt,
                       fontsize=10,
                       verticalalignment='top',
-                      horizontalalignment='center',
+                      horizontalalignment='right',
                       bbox=dict( boxstyle="round,pad=0.3", edgecolor="black", facecolor="white" ) )
             
-            isoLegend = fig.legend( loc="outside upper center",
-                        bbox_to_anchor=( 0.5, 0.15 ) )
+            isoLegend = fig.legend( loc="outside right upper",
+                        bbox_to_anchor=( 1, 0.95 ) )
             isoLegend.get_frame().set_edgecolor("black")
 
             
-            ## KNN LEGENDS ###############
-            fig.text( 0.5, 0.05,
-                      knnMetadataTxt,
-                      fontsize=10,
-                      verticalalignment='top',
-                      horizontalalignment='center',
-                      bbox=dict( boxstyle="round,pad=0.3", edgecolor="black", facecolor="white" ) )
-            
-            isoLegend = fig.legend( loc="outside upper center",
-                        bbox_to_anchor=( 0.5, 0.15 ) )
-            isoLegend.get_frame().set_edgecolor("black")
+
             
             
             ## MIX LEGENDS ###############
@@ -573,13 +604,14 @@ def run( astData, plots, exportFile, export ):
 
             mixLegend2 = fig.legend( handles=mixLegEntries2,
                         loc="outside right lower",
-                        bbox_to_anchor=( 0.88, 0 ),
+                        bbox_to_anchor=( 0.885, 0 ),
                         title="Iso Anomalies",
                         fontsize=10,
                         title_fontsize=11 )
             mixLegend2.get_frame().set_edgecolor("black")
 
             plt.rcParams['figure.dpi'] = 300
+
             
             if export:
                 ext = str(minPts) + "-" + str(e)
@@ -591,7 +623,7 @@ def run( astData, plots, exportFile, export ):
 
 
         getObs.getAll( astName, untrimmed, astData.dataCols, exportFile + "hybrid/", export )
-        COI, anomFlg = getClusters( unnorm, isoResults, labels )
+        COI, anomFlg = getClusters( unnorm, isoResults, labels, densityScores )
         if anomFlg:
             astList.append( [ astName, "Y", COI ] )
         else:
@@ -603,6 +635,7 @@ def run( astData, plots, exportFile, export ):
                 out.exportFile( 3, filename , clusterData[ astData.dataCols ] )
             else:
                 out.screenDisplay( clusterData[ astData.dataCols ], "Cluster " + str(cluster) + " Data" )
+
         # if ( stamps ):
         #     postage.fromDF( clusterData )
     headers = [ "Name", "Interesting?", "Clusters" ]
@@ -610,4 +643,4 @@ def run( astData, plots, exportFile, export ):
     if export:
         out.exportFile( 3, exportFile + "hybrid/interestingAsteroids", astList, headers )
     else:
-        out.screenDisplay( astList, "Anomalous Asteroids:\n", headers )
+        out.screenDisplay( astList, "Anomalous Asteroids:", headers )
