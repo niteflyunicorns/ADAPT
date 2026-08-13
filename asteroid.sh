@@ -8,6 +8,7 @@
 #SBATCH --time=00:10:00
 #SBATCH --mem=8GB
 #SBATCH --cpus-per-task=1
+#SBATCH --partition rhel10
 
 # VARIABLES ---------------------------------------
 # required variables:
@@ -17,7 +18,7 @@ offset=1000
 # file="/home/sjc497/ADAPT/astNames.csv"
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType='mix'
+fltrType='anomaly'
 # ^ fltrType can be one of:
 # 'anomaly', 'dbscan', 'isoforest', 'knn', 'mix'
 fltrLvl=2
@@ -28,7 +29,7 @@ exportFlg=False
 # optional variables:
 fileType=2 # default 2 (.csv)
 fileName="/scratch/sjc497/ADAPT/data/" # default ""
-astName=6478 # default 0
+astName=6993 # default 0
 featFltr=n # default n
 lB=0 # default 0
 uB=0 # default 0
