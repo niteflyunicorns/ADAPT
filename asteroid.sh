@@ -8,6 +8,7 @@
 #SBATCH --time=00:10:00
 #SBATCH --mem=8GB
 #SBATCH --cpus-per-task=1
+#SBATCH --partition rhel10
 
 # VARIABLES ---------------------------------------
 # required variables:
@@ -17,9 +18,9 @@ offset=1000
 # file="/home/sjc497/ADAPT/astNames.csv"
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType='mix'
+fltrType='hybrid'
 # ^ fltrType can be one of:
-# 'anomaly', 'dbscan', 'isoforest', 'knn', 'mix'
+# 'anomaly', 'dbscan', 'isoforest', 'knn', 'hybrid'
 fltrLvl=2
 
 plots=True
