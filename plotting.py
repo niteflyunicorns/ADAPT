@@ -67,7 +67,74 @@ def plot3D( astName, xdata, ydata, zdata,
     #     fig.show()
 
     pass
-    
+
+
+#########################################################################################
+### Function: plot2DStack
+### Inputs: asteroid name, array of y-axis data, shared x-axis data, array of y-axis labels,
+###         shared x-axis label, data for cursor, and a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
+def plot2DStack( astName, yaxisdata, xaxisdata,
+                    yaxisnames, xaxisname, data, export ):
+
+    # this function is for plotting as many stacked plots as necessary that all share
+    # the same xaxis (likely 'jd')
+    # remember that yaxisdata and yaxisnames have multiple items in them
+    numPlots = len( yaxisnames )
+    colors= ['deeppink', 'slateblue', 'teal' ]
+    fig, ax = plt.subplots( numPlots, layout="constrained", sharex=True )
+    fig.suptitle( "Asteroid " + str( astName ) )
+
+    for plot in range(numPlots):
+        ax[plot].scatter( xaxisdata, yaxisdata[plot], color=colors[plot])
+        ax[plot].set_ylabel( yaxisnames[plot] )
+
+    ax[-1].set_xlabel( xaxisname )
+
+    if export:
+        fig.savefig( str(astName) + "plots3-2D.png" )
+    else:
+        cursor = mplcursors.cursor( hover=True )
+        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
+        plt.show( block=True )
+        # fig.show()
+
+
+#########################################################################################
+### Function: plot2DStackWithCMAP
+### Inputs: asteroid name, array of y-axis data, shared x-axis data, array of y-axis labels,
+###         shared x-axis label, array of data for cmap, label for cmap, data for cursor,
+###         and a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
+def plot2DStackWithCMAP( astName, yaxisdata, xaxisdata, cmapdata,
+                    yaxisnames, xaxisname, cmapname, data, export ):
+
+    # this function is for plotting as many stacked plots as necessary that all share
+    # the same xaxis (likely 'jd')
+    # remember that yaxisdata and yaxisnames have multiple items in them
+    numPlots = len( yaxisnames )
+    fig, ax = plt.subplots( numPlots, layout="constrained", sharex=True )
+    fig.suptitle( "Asteroid " + str( astName ) )
+
+    for plot in range(numPlots):
+        sc = ax[plot].scatter( xaxisdata, yaxisdata[plot], c=cmapdata, cmap='plasma')
+            
+        ax[plot].set_ylabel( yaxisnames[plot] )
+
+    ax[-1].set_xlabel( xaxisname )
+
+    fig.colorbar( sc, ax=ax, orientation='vertical', label=cmapname )
+
+    if export:
+        fig.savefig( str(astName) + "plots3-2D.png" )
+    else:
+        cursor = mplcursors.cursor( hover=True )
+        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
+        plt.show( block=True )
+        # fig.show()
+
 #########################################################################################
 ### Function: plot3Das2D
 ### Inputs: asteroid name, x, y, and z data arrays, x, y, and z data names, and
@@ -103,6 +170,46 @@ def plot3Das2D( astName, xdata, ydata, zdata,
         cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
         plt.show( block=True )
         # fig.show()
+
+
+#########################################################################################
+### Function: plot3Das2DWithCMAP
+### Inputs: asteroid name, x, y, and z data arrays, x, y, and z data names,
+###         cmap data, cmap label, and a flag for exporting
+### Returns: none (either displays plot immediately, or silently exports to png)
+#########################################################################################
+def plot3Das2DWithCMAP( astName, xdata, ydata, zdata, cmapdata,
+                    xname, yname, zname, cmapname, data, export ):
+
+    fig, ax = plt.subplots( 3, layout="constrained" )
+    fig.suptitle( "Asteroid " + str( astName ) )
+
+    # first subplot
+    sc1 = ax[0].scatter( xdata, ydata, c=cmapdata, cmap='plasma' )
+    ax[0].set_xlabel( xname )
+    ax[0].set_ylabel( yname )
+
+    # second subplot
+    sc2 = ax[1].scatter( xdata, zdata, c=cmapdata, cmap='plasma' )
+    ax[1].set_xlabel( xname )
+    ax[1].set_ylabel( zname )
+
+    # third subplot
+    sc3 = ax[2].scatter( zdata, ydata, c=cmapdata, cmap='plasma' )
+    ax[2].set_ylabel( yname )
+    ax[2].set_xlabel( zname )
+
+    fig.colorbar( sc3, ax=ax, orientation="vertical", label=cmapname )
+    
+    if export:
+        fig.savefig( str(astName) + "plots3-2D.png" )
+    else:
+        cursor = mplcursors.cursor( hover=True )
+        cursor.connect( "add", lambda sel: sel.annotation.set_text( data[ "id" ].iloc[ sel.index ] ) )
+        plt.show( block=True )
+        # fig.show()
+
+        
         
 #########################################################################################
 ### Function: plot3Dand2D

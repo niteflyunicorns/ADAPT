@@ -48,8 +48,10 @@ def getSelect( name, obsToGet, data, cols, exportFlg ):
         
     newDF = df[ cols ]
     if not exportFlg:
-        print( "Asteroid " + str( name ) + ":" )
-        print( tabulate( newDF, headers='keys', tablefmt='simple_outline' ) ) 
+        pass
+        # taking this out for now because things are printing twice
+        # print( "Asteroid " + str( name ) + ":" )
+        # print( tabulate( newDF, headers='keys', tablefmt='simple_outline' ) ) 
     else:
         pass
         # for now taking this out because otherwise hybrid outputs everything twice.

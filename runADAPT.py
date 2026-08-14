@@ -33,6 +33,7 @@ import anomRatingADAPT as anomaly
 import dbscanADAPT as dbscan
 import isoforestADAPT as forest
 import hybridADAPT as hybrid
+import knnADAPT as knn
 
 ## GLOBAL VARS ##########################################################################
 offset = 0 # for shifting data scope
@@ -209,6 +210,8 @@ def main( ):
         dbscan.runDBSCAN( astData, plots, exportFile, exportFlg )
     elif fltrType == "isoforest":
         forest.runIForest( astData, plots, exportFile, exportFlg )
+    elif fltrType == 'knn':
+        knn.runKNN( astData, plots, exportFile, exportFlg)
     elif fltrType == "mix":
         hybrid.run( astData, plots, exportFile, exportFlg )
     else:

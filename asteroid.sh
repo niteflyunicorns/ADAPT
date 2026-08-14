@@ -1,13 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=13302adapt  #the name of your job
+#SBATCH --job-name=knnTest  #the name of your job
 
 #change to your NAUID
-#SBATCH --output=/scratch/sjc497/adapt-hybrid13302.out #this is the file for stdout 
-#SBATCH --error=/scratch/sjc497/adapt-hybrid13302.err #this is the file for stderr
+#SBATCH --output=/scratch/sjc497/adapt-knnTest1.out #this is the file for stdout 
+#SBATCH --error=/scratch/sjc497/adapt-knnTest1.err #this is the file for stderr
 
 #SBATCH --time=00:10:00
 #SBATCH --mem=8GB
 #SBATCH --cpus-per-task=1
+#SBATCH --partition rhel10
 
 # VARIABLES ---------------------------------------
 # required variables:
@@ -17,13 +18,13 @@ offset=1000
 # file="/home/sjc497/ADAPT/astNames.csv"
 # attrs=['elong', 'mag18omag8', 'H', 'rb']
 
-fltrType='mix'
+fltrType='hybrid'
 # ^ fltrType can be one of:
-# 'anomaly', 'dbscan', 'isoforest', 'mix'
+# 'anomaly', 'dbscan', 'isoforest', 'knn', 'hybrid'
 fltrLvl=2
 
 plots=True
-exportFlg=True
+exportFlg=False
 
 # optional variables:
 fileType=2 # default 2 (.csv)

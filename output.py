@@ -1,7 +1,7 @@
 #########################################################################################
 ### Program: ADAPT (Anomaly Detection for Asteroid Patterns and Trends)
 ### Programmer: Savannah Chappus
-### Last Update: 1.31.2025
+### Last Update: 5.19.2026
 ###
 ### File: output.py
 ### Use: exports or prints program results
@@ -53,10 +53,13 @@ def help( ):
 ### Returns: none (prints help message on screen)
 #########################################################################################
 def screenDisplay( data, title, hdr='keys' ):
-    print( "\n\n" )
-    print( title + ( '-' * 50 ) )
-    tabulate( data, headers=hdr, tablefmt='simple_outline' )
-    print( "\n" )
+    msg = "\n\n" + title + ' ' + ('-' * 50 ) + "\n"
+    msg += tabulate( data, headers=hdr, tablefmt='simple_outline' ) + "\n"
+    print( msg )
+    # print( "\n\n" )
+    # print( title + ' ' + ( '-' * 50 ) )
+    # tabulate( data, headers=hdr, tablefmt='simple_outline' )
+    # print( "\n" )
 
 
 #########################################################################################

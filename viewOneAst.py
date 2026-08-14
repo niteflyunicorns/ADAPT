@@ -122,21 +122,35 @@ def view( astData, astArgs, exportFlg, exportArgs, fltr, plots ):
 
         ###### NEW PLOTTING ######
         if plots:
-            plot.plot3Das2D( astName, asteroid['rb'],
-                        asteroid['elong'],
-                        asteroid['mag18omag8'],
-                        "rb", "elong", "mag18omag8",
-                        asteroid, exportFlg )
+            # plot.plot3Das2D( astName, asteroid['rb'],
+            #             asteroid['elong'],
+            #             asteroid['mag18omag8'],
+            #             "rb", "elong", "mag18omag8",
+            #             asteroid, exportFlg )
 
-            plot.plot3Dand2D( astName, asteroid['rb'],
-                        asteroid['elong'],
-                        asteroid['mag18omag8'],
-                        "rb", "elong", "mag18omag8",
-                        asteroid, exportFlg )
+            # plot.plot3Dand2D( astName, asteroid['rb'],
+            #             asteroid['elong'],
+            #             asteroid['mag18omag8'],
+            #             "rb", "elong", "mag18omag8",
+            #             asteroid, exportFlg )
+
+            yDataNames = [ item for item in astData.wantedAttrs if item != 'jd' ]
+            yData = [ asteroid[ item ] for item in astData.wantedAttrs if item != 'jd' ]
+            
+            plot.plot2DStackWithCMAP( astName, yData, asteroid[ 'jd' ], asteroid[ 'heliodist' ],
+                              yDataNames, 'jd', 'heliodist', asteroid, exportFlg )
+
+            plot.plot3Das2DWithCMAP( astName, asteroid['rb'], asteroid['elong'],
+                                     asteroid['mag18omag8'], asteroid[ 'heliodist'],
+                                     "rb", "elong", "mag18omag8", "heliodist", asteroid, exportFlg )
+
+                    # plot.plot2D( astName, asteroid[ 'jd' ],
+                    #              asteroid[ attr ], asteroid,
+                    #              "jd", attr, exportFlg )
 
         # call function to print all observations of
         # this asteroid
-        getObs.getAll( astName, asteroid, astData.dataCols, exportFlg )
+        getObs.getAll( astName, asteroid, astData.dataCols, "/scratch/sjc497/", exportFlg )
 
         # plot3D( astName, asteroid['rb'],
         #             asteroid['elong'],
